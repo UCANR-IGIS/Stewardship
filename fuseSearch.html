@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON File Search</title>
+    <!-- Add Bootstrap CSS link -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+
+<body>
+    <div class="container mt-4">
+        <h1>JSON File Search</h1>
+        <!-- No file input, using test JSON data directly in the script -->
+
+        <div class="form-group mt-3">
+            <div id="searchData" class="input-group">
+                <input type="text" class="form-control" id="searchInput" placeholder="Enter text to search">
+                <div class="input-group-append">
+                    <button class="btn btn-primary" onclick="searchJson()">Search</button>
+                </div>
+                <div class="form-check"><input name="trainCheck" id="gis" class="form-check-input" type="checkbox"
+                        value="apprenticeship" /> <label class="form-check-label" for="gis">Apprenticeship</label></div>
+                <div class="form-check"><input name="trainCheck" id="training" class="form-check-input" type="checkbox"
+                        value="training" /> <label class="form-check-label" for="internship">Internship</label>
+                </div>
+                <div class="form-check"><input name="trainCheck" id="drone" class="form-check-input" type="checkbox"
+                        value="drone" />
+                    <label class="form-check-label" for="certificate">Certificate Program</label></div>
+                <div class="form-check"><input name="trainCheck" id="research" class="form-check-input" type="checkbox"
+                        value="research" /> <label class="form-check-label" for="associate">Associate's Degree</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Display search terms as pills inside the search input -->
+        <div class="form-group mt-3" id="searchTermsContainer"></div>
+
+        <!-- Display type-ahead suggestions as Bootstrap pills -->
+        <div class="mt-3" id="typeAhead"></div>
+
+        <!-- Display search results as Bootstrap list -->
+        <ul class="list-group mt-3" id="searchResults"></ul>
+    </div>
+
+    <!-- Add Bootstrap JS script -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+
+
+    <script>
+        const list = [{
+                "title": "Old Man's War",
+                "author": {
+                    "firstName": "John",
+                    "lastName": "Scalzi"
+                }
+            },
+            {
+                "title": "The Lock Artist",
+                "author": {
+                    "firstName": "Steve",
+                    "lastName": "Hamilton"
+                }
+            },
+            {
+                "title": "HTML5",
+                "author": {
+                    "firstName": "Remy",
+                    "lastName": "Sharp"
+                }
+            },
+            {
+                "title": "Right Ho Jeeves",
+                "author": {
+                    "firstName": "P.D",
+                    "lastName": "Woodhouse"
+                }
+            },
+            {
+                "title": "The Code of the Wooster",
+                "author": {
+                    "firstName": "P.D",
+                    "lastName": "Woodhouse"
+                }
+            },
+            {
+                "title": "Thank You Jeeves",
+                "author": {
+                    "firstName": "P.D",
+                    "lastName": "Woodhouse"
+                }
+            },
+            {
+                "title": "The DaVinci Code",
+                "author": {
+                    "firstName": "Dan",
+                    "lastName": "Brown"
+                }
+            },
+            {
+                "title": "Angels & Demons",
+                "author": {
+                    "firstName": "Dan",
+                    "lastName": "Brown"
+                }
+            },
+            {
+                "title": "The Silmarillion",
+                "author": {
+                    "firstName": "J.R.R",
+                    "lastName": "Tolkien"
+                }
+            },
+            {
+                "title": "Syrup",
+                "author": {
+                    "firstName": "Max",
+                    "lastName": "Barry"
+                }
+            },
+            {
+                "title": "The Lost Symbol",
+                "author": {
+                    "firstName": "Dan",
+                    "lastName": "Brown"
+                }
+            },
+            {
+                "title": "The Book of Lies",
+                "author": {
+                    "firstName": "Brad",
+                    "lastName": "Meltzer"
+                }
+            },
+            {
+                "title": "Lamb",
+                "author": {
+                    "firstName": "Christopher",
+                    "lastName": "Moore"
+                }
+            },
+            {
+                "title": "Fool",
+                "author": {
+                    "firstName": "Christopher",
+                    "lastName": "Moore"
+                }
+            },
+            {
+                "title": "Incompetence",
+                "author": {
+                    "firstName": "Rob",
+                    "lastName": "Grant"
+                }
+            },
+            {
+                "title": "Fat",
+                "author": {
+                    "firstName": "Rob",
+                    "lastName": "Grant"
+                }
+            },
+            {
+                "title": "Colony",
+                "author": {
+                    "firstName": "Rob",
+                    "lastName": "Grant"
+                }
+            },
+            {
+                "title": "Backwards, Red Dwarf",
+                "author": {
+                    "firstName": "Rob",
+                    "lastName": "Grant"
+                }
+            },
+            {
+                "title": "The Grand Design",
+                "author": {
+                    "firstName": "Stephen",
+                    "lastName": "Hawking"
+                }
+            },
+            {
+                "title": "The Book of Samson",
+                "author": {
+                    "firstName": "David",
+                    "lastName": "Maine"
+                }
+            },
+            {
+                "title": "The Preservationist",
+                "author": {
+                    "firstName": "David",
+                    "lastName": "Maine"
+                }
+            },
+            {
+                "title": "Fallen",
+                "author": {
+                    "firstName": "David",
+                    "lastName": "Maine"
+                }
+            },
+            {
+                "title": "Monster 1959",
+                "author": {
+                    "firstName": "David",
+                    "lastName": "Maine"
+                }
+            }
+        ]
+
+        //const Fuse = require('fuse.js');
+
+        const fuseOptions = {
+            // isCaseSensitive: false,
+            // includeScore: false,
+            // shouldSort: true,
+            // includeMatches: false,
+            // findAllMatches: false,
+            // minMatchCharLength: 1,
+            // location: 0,
+            // threshold: 0.6,
+            // distance: 100,
+            // useExtendedSearch: false,
+            // ignoreLocation: false,
+            // ignoreFieldNorm: false,
+            // fieldNormWeight: 1,
+            keys: [
+                "title",
+                "author.firstName"
+            ]
+        };
+
+        const fuse = new Fuse(list, fuseOptions);
+
+        // Change the pattern
+        const searchPattern = "tr"
+
+        function search() {
+            return fuse.search(searchPattern)
+        }
+    </script>
+</body>
+
+</html>

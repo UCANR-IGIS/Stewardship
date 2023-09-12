@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            font-family: var(--calcite-sans-family);
+        }
+
+        .wrapper {
+            display: grid;
+            grid-template-columns: [col] 2fr [col] 5fr;
+            grid-template-rows: [row] auto [row] auto [row] 1fr [row] 1fr;
+            /* grid-column-gap: 10px;
+                grid-row-gap: 10px; */
+            grid-gap: 10px;
+            background-color: #e3e3e3;
+            color: #444;
+            height: 100vh;
+            width: 100vw;
+            padding: 10px;
+        }
+
+        .box {
+            border-radius: 0px;
+            padding: 0px;
+            font-size: 150%;
+        }
+
+        .box .box {
+            color: #444;
+        }
+
+        .centerView {
+            grid-column: 2;
+            grid-row: 1 / 5;
+            grid-row-gap: 10px;
+            display: grid;
+            grid-template-rows: auto 10fr auto;
+        }
+
+        .dataToggle {
+            grid-column: 1;
+            grid-row: 1;
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-template-rows: auto 1fr;
+            padding: 0px;
+            background-color: #f8f8f8;
+            font-size: clamp(7pt, 1.5vh, 1.5vh);
+            text-align: left;
+        }
+
+        .advCount {
+            grid-column: 1;
+            grid-row: 2;
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-template-rows: auto 1fr;
+            padding: 0px;
+            background-color: #f8f8f8;
+            font-size: clamp(7pt, 1.5vh, 1.5vh);
+            text-align: center;
+        }
+
+
+        .advLists {
+            grid-column: 1;
+            grid-row: 3 / 5;
+            padding: 0px;
+            background-color: #f8f8f8;
+            font-size: clamp(7pt, 1.5vh, 1.5vh);
+            text-align: left;
+            /* height: calc((100vh / 2) - 31px); */
+        }
+
+        .indicatorHeading {
+            grid-column: 1;
+            grid-row: 1 / 2;
+            padding: 0px;
+            background-color: #ECECEC;
+            font-size: clamp(7pt, 1.5vh, 1.5vh);
+            text-align: center;
+        }
+
+        .indicatorBody {
+            grid-column: 1;
+            grid-row: 2 / 3;
+            padding: 0px;
+            background-color: #f8f8f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 5vh;
+            font-weight: bold;
+        }
+
+        .indicatorToggle {
+            grid-column: 1;
+            grid-row: 2 / 3;
+            padding: 5px;
+            background-color: #f8f8f8;
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
+            font-size: 2vh;
+        }
+
+        .selectedCounty {
+            grid-column: 1;
+            grid-row: 1 / 2;
+            font-size: clamp(8pt, 1.8vh, 1.8vh);
+            font-weight: 700;
+            padding: 5px;
+            text-align: center;
+            font-family: "Avenir Next", "Avenir", "Hevetica Neue", "DejaVu Sans Condensed", "Helvetica", sans-serif;
+            background-color: rgb(0, 60, 97);
+            color: white !important;
+            text-align: center;
+            z-index: 1
+        }
+
+        .mapDiv {
+            grid-column: 1;
+            grid-row: 2 / 4;
+            background-color: #f8f8f8;
+            font-size: 1.5vh;
+        }
+
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        .underRecruitment>.indicatorHeading {
+            font-size: 1.5vh;
+        }
+
+        .list-group-item.active {
+            background-color: rgb(0, 60, 97) !important;
+        }
+
+        button.right {
+            float: right;
+        }
+
+        span {
+            font-size: clamp(8pt, 1.8vh, 1.8vh);
+        }
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://js.arcgis.com/4.25/esri/themes/light/main.css">
+
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0-beta.97/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.0.0-beta.97/calcite.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous">
+    </script>
+    <script src="https://code.jquery.com/jquery-3.6.2.min.js"
+        integrity="sha256-2krYZKh//PcchRtd+H+VyyQoZ/e3EcrkxhM8ycwASPA=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alasql@2.2"></script>
+    <script src="https://js.arcgis.com/4.25/"></script>
+    <script>
+        var view
+        var arrOrg = []
+        var countyName
+        var initLoad = 0
+        var initExtent
+        var org_Table
+        var initCounties
+        var initZip
+        var radioVar = 0
+
+        function zoomAdvFunc() {}
+
+        require(["esri/config", "esri/WebMap", "esri/Map", "esri/views/MapView", "esri/layers/FeatureLayer",
+            "esri/core/reactiveUtils", "esri/Graphic", "esri/geometry/Point", "esri/geometry/Polygon",
+            "esri/widgets/Legend", "esri/widgets/Home", "esri/Viewpoint"
+        ], (
+            esriConfig, WebMap, Map, MapView, FeatureLayer, reactiveUtils, Graphic, Point, Polygon, Legend,
+            Home, Viewpoint) => {
+            // Moved Here
+            function clearSelection() {
+                countyName = ''
+                view.graphics.removeAll()
+                $(".selectedCounty").html("Click map to select a county")
+                $("#clearBtn").hide()
+                orgDataQuery(countyName)
+                view.goTo(initExtent);
+            }
+
+            function orgDataQuery(county = '') {
+                $("#advList").empty()
+                if (arrOrg.length == 0) {
+                    initCounties = []
+                    initZip = []
+                    org_Table.queryFeatures().then((results) => {
+                        $.each(results.features, (key, val) => {
+                            let resultInit = val.attributes.Service_Area___County;
+                            let CountiesInit = resultInit.split(",").map((item) => {
+                                return item.trim();
+                            });
+                            initCounties = initCounties.concat(CountiesInit);
+                            let resultInitZip = val.attributes.Service_Area___Zip_Codes;
+                            let ZipInit = resultInitZip.split(",").map((item) => {
+                                return item.trim();
+                            });
+                            initZip = initZip.concat(ZipInit);
+                            arrOrg.push({
+                                OrgType: val.attributes.Organization_type,
+                                Name: val.attributes.Name,
+                                Address: val.attributes.Address,
+                                Contact: val.attributes.Contact_Name,
+                                Phone: val.attributes.Contact_Phone,
+                                Email: val.attributes.Email,
+                                County: val.attributes.Service_Area___County,
+                                Zip: val.attributes.Service_Area___Zip_Codes,
+                                Services: val.attributes.Services,
+                                Descr: val.attributes.Description,
+                                OrgEx: val.attributes.Organic_exclusively_,
+                                Display: val.attributes.Ready_to_Display
+                            })
+
+                        })
+
+                        function onlyUnique(value, index, array) {
+                            return array.indexOf(value) === index;
+                        }
+
+                        // usage example:
+                        initCounties = initCounties.filter(onlyUnique);
+                        initCounties.sort();
+
+                        initZip = initZip.filter(onlyUnique);
+                        initZip.sort();
+
+                        zoomAdv(initCounties)
+
+                        orgDataResults(county)
+                    })
+                } else {
+                    orgDataResults(county)
+                }
+            }
+
+            function orgDataResults(county = '') {
+                let arr = []
+                if (radioVar == 0) {
+                    var field = 'County'
+                } else {
+                    var field = 'Zip'
+                }
+                if (county == '') {
+                    arr = alasql(
+                        "SELECT OrgType, Name, Address, Contact, Phone, Email, County, Zip, Services, Descr FROM ? ORDER BY Name",
+                        [arrOrg])
+                } else {
+                    arr = alasql(
+                        "SELECT OrgType, Name, Address, Contact, Phone, Email, County, Zip, Services, Descr FROM ? WHERE " + field +" LIKE '%" +
+                        county +
+                        "%'  ORDER BY SymTitle, AcademicName", [arrOrg])
+                }
+                $.each(arr, (key, val) => {
+                    $("#advList").append(popListOrg(val))
+                })
+                $("#advHC").text(arr.length)
+            }
+
+            function popListOrg(val) {
+                let listTxt
+                if (radioVar == 0) {
+                listTxt = "<li id='" + val.Name +
+                    "' class='list-group-item' data-result-id='" + val.County + "'><span data-result-title='" +
+                    val.County + "'>" + val.Name +
+                    "</span><br>Org Type: " + val.OrgType + "<br>Counties: " + val.County + "</li>"
+                } else {
+                    listTxt = "<li id='" + val.Name +
+                    "' class='list-group-item' data-result-id='" + val.Zip + "'><span data-result-title='" +
+                    val.Zip + "'>" + val.Name +
+                    "</span><br>Org Type: " + val.OrgType + "<br>Counties: " + val.County + "</li>"
+                }
+
+                return listTxt
+            }
+            // End
+            esriConfig.apiKey =
+                "AAPK81f0d351c3594c2b8cd4832bde9a5807jQ1T-g3D3qxEvv_NMG7d29O7RjEFW3zUK5A325tz4uSUmfCc2C5GJ8NOi4-35lN-";
+
+            const counties = new FeatureLayer({
+                url: "https://services.arcgis.com/0xnwbwUttaTjns4i/arcgis/rest/services/ANR_Footprint_New/FeatureServer/6",
+                visible: false
+            })
+
+            org_Table = new FeatureLayer({
+                url: "https://services.arcgis.com/0xnwbwUttaTjns4i/arcgis/rest/services/Org_resource_map/FeatureServer/0",
+                visible: false
+            })
+
+            const webmap = new WebMap({
+                portalItem: {
+                    // autocasts as new PortalItem()
+                    id: "9b1f64a8c9664d46971dc0ee9de05dda"
+                }
+            });
+
+            view = new MapView({
+                map: webmap,
+                container: "viewDiv",
+                constraints: {
+                    snapToZoom: false
+                }
+            });
+
+            const listNode = document.getElementById("advList");
+
+            const btn = document.createElement('div');
+            btn.classList.add("esri-widget--button")
+            btn.classList.add("esri-icon-legend")
+            btn.title = "Legend"
+            btn.id = "legendBtn"
+
+            const clrbtn = document.createElement('div');
+            clrbtn.classList.add("esri-widget--button")
+            clrbtn.classList.add("esri-icon-trash")
+            clrbtn.style.display = "none"
+            clrbtn.title = "Clear Selection"
+            clrbtn.id = "clearBtn"
+
+            let legend = new Legend({
+                view: view,
+                visible: false
+            });
+
+            view.ui.add(legend, "top-right");
+
+            let homeWidget = new Home({
+                view: view
+            });
+
+            // adds the home widget to the top left corner of the MapView
+            view.ui.add(homeWidget, "top-left");
+            view.ui.add(btn, 'top-left');
+            view.ui.add(clrbtn, 'top-left');
+
+            webmap.when(() => {
+                layer = webmap.layers.at(2);
+                layer.outFields = ["*"];
+                counties.load().then(() => {
+                    console.log("Adding table");
+                    // Add table to the webmap's table collection
+                    webmap.layers.add(counties)
+                    counties
+                        .when(() => {
+                            return counties.queryExtent();
+                        })
+                        .then((response) => {
+                            initExtent = response.extent.expand(1.2)
+                            view.goTo(initExtent);
+
+                            let vp = new Viewpoint({
+                                targetGeometry: initExtent
+                            });
+
+                            // Sets the model's viewpoint to the Viewpoint based on a polygon geometry
+                            homeWidget.viewpoint = vp;
+
+                        });
+
+
+                });
+            })
+
+            reactiveUtils.when(() => !view?.updating, () => {
+                if (initLoad == 0) {
+                    orgDataQuery(countyName)
+
+                    initLoad = 1
+                }
+            })
+            view.on("click", (event) => {
+                // only include graphics from hurricanesLayer in the hitTest
+                const opts = {
+                    include: view.layerViews.items[radioVar].layer
+                }
+                let symbol = {
+                    type: "simple-fill", // autocasts as new SimpleFillSymbol()
+                    color: [0, 255, 255, 0.2],
+                    style: "solid",
+                    outline: { // autocasts as new SimpleLineSymbol()
+                        color: [0, 255, 255, 1],
+                        width: 1
+                    }
+                };
+                view.hitTest(event, opts).then((response) => {
+                    // check if a feature is returned from the hurricanesLayer
+                    if (response.results.length) {
+                        const graphic = response.results[0].graphic;
+                        graphic.symbol = symbol
+                        if (radioVar == 0){
+                        countyName = graphic.attributes.name
+                        $(".selectedCounty").html(countyName +
+                            " County"
+                        )
+                        } else {
+                            countyName = graphic.attributes.POSTCODE
+                        $(".selectedCounty").html("Zip Code: " +countyName
+                        )
+                        }
+                        $("#clearBtn").show()
+                        orgDataQuery(countyName)
+                        view.graphics.removeAll()
+                        view.graphics.add(graphic)
+                    }
+                });
+            });
+
+            listNode.addEventListener("click", onListClickHandler);
+
+            function onListClickHandler(event) {
+                const target = event.target;
+                let resultId = target.getAttribute("data-result-id");
+                const resulttitle = target.getAttribute("data-result-title");
+
+                if (resultId != null) {
+                    resultId
+                } else {
+                    resultId = resulttitle
+                }
+                const myArray = resultId.split(",").map((item) => {
+                    return item.trim();
+                });
+
+                zoomAdv(myArray)
+            }
+
+            function zoomAdv(counties) {
+                view.graphics.removeAll()
+                view.layerViews.items[radioVar].layer.queryFeatures().then((results) => {
+                    $.each(results.features, (key, val) => {
+                        $.each(counties, (key2, val2) => {
+                            if (radioVar == 0) {
+                            if (val.attributes.name == val2) {
+                                let pt = new Polygon({
+                                    rings: val.geometry.rings,
+                                    spatialReference: val.geometry
+                                        .spatialReference
+                                });
+
+                                let symbol = {
+                                    type: "simple-fill", // autocasts as new SimpleFillSymbol()
+                                    color: [0, 60, 97, 1],
+                                    style: "solid",
+                                    outline: { // autocasts as new SimpleLineSymbol()
+                                        color: [255, 255, 255, 0.5],
+                                        width: 0.5
+                                    }
+                                };
+                                graphic = new Graphic(pt, symbol);
+                                view.graphics.add(graphic);
+                                $("#clearBtn").show()
+                            }
+                        } else {
+                            if (val.attributes.POSTCODE == val2) {
+                                let pt = new Polygon({
+                                    rings: val.geometry.rings,
+                                    spatialReference: val.geometry
+                                        .spatialReference
+                                });
+
+                                let symbol = {
+                                    type: "simple-fill", // autocasts as new SimpleFillSymbol()
+                                    color: [0, 60, 97, 1],
+                                    style: "solid",
+                                    outline: { // autocasts as new SimpleLineSymbol()
+                                        color: [255, 255, 255, 0.5],
+                                        width: 0.5
+                                    }
+                                };
+                                graphic = new Graphic(pt, symbol);
+                                view.graphics.add(graphic);
+                                $("#clearBtn").show()
+                            }
+                        }
+                        })
+                    })
+                })
+            }
+
+            zoomAdvFunc = zoomAdv
+
+            $(document).ready(() => {
+                $("ul.adv").on("click", "li", function () {
+                    $("li").removeClass("active");
+                    $(this).toggleClass("active");
+                });
+                $("#legendBtn").on("click", () => {
+                    if (legend.visible == true) {
+                        legend.visible = false
+                    } else {
+                        legend.visible = true
+                    }
+                });
+                $("#clearBtn").on("click", () => {
+                    clearSelection()
+                    if (radioVar == 0) {
+                    zoomAdv(initCounties)
+                    } else {
+                        zoomAdv(initZip)
+                    }
+                })
+                $('#radioDiv input:radio').on("click", function () {
+                    if ($(this).val() === 'county') {
+                        radioVar = 0
+                        view.layerViews.items[1].layer.visible = true
+                        view.layerViews.items[2].layer.visible = false
+                        zoomAdv(initCounties)
+                    } else if ($(this).val() === 'point') {
+                        radioVar = 2
+                        view.layerViews.items[2].layer.visible = true
+                        view.layerViews.items[1].layer.visible = false
+                        zoomAdv(initZip)
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="box dataToggle">
+            <div class="indicatorHeading">Choose data</div>
+            <div id="radioDiv" class="indicatorToggle">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="flexRadioDefault" id="countyRadio" value="county"
+                        checked>
+                    <label class="form-check-label" for="countyRadio">
+                        County
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="flexRadioDefault" id="pointRadio" value="point">
+                    <label class="form-check-label" for="pointRadio">
+                        Zip Code
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="box advCount">
+            <div class="indicatorHeading">Organizations</div>
+            <div id="advHC" class="indicatorBody">20</div>
+        </div>
+        <div class="box advLists">
+            <div style="overflow-y: scroll; height: 100%">
+                <ul id="advList" class="list-group adv">
+
+                </ul>
+            </div>
+        </div>
+
+        <div class="box centerView">
+            <div class="box selectedCounty">Click map to select a county</div>
+            <div class="box mapDiv">
+                <div id="viewDiv">
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON File Search</title>
+    <!-- Add Bootstrap CSS link -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+
+<body>
+    <div class="container mt-4">
+        <h1>JSON File Search</h1>
+        <!-- No file input, using test JSON data directly in the script -->
+
+        <div class="form-group mt-3">
+            <div id ="searchData" class="input-group">
+                <input type="text" class="form-control" id="searchInput" placeholder="Enter text to search">
+                <div class="input-group-append">
+                    <button class="btn btn-primary" onclick="searchJson()">Search</button>
+                </div>
+                <div class="form-check"><input name="trainCheck" id="gis" class="form-check-input" type="checkbox"
+                        value="apprenticeship" /> <label class="form-check-label" for="gis">Apprenticeship</label></div>
+                <div class="form-check"><input name="trainCheck" id="training" class="form-check-input" type="checkbox"
+                        value="training" /> <label class="form-check-label" for="internship">Internship</label>
+                </div>
+                <div class="form-check"><input name="trainCheck" id="drone" class="form-check-input" type="checkbox"
+                        value="drone" />
+                    <label class="form-check-label" for="certificate">Certificate Program</label></div>
+                <div class="form-check"><input name="trainCheck" id="research" class="form-check-input" type="checkbox"
+                        value="research" /> <label class="form-check-label" for="associate">Associate's Degree</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Display search terms as pills inside the search input -->
+        <div class="form-group mt-3" id="searchTermsContainer"></div>
+
+        <!-- Display type-ahead suggestions as Bootstrap pills -->
+        <div class="mt-3" id="typeAhead"></div>
+
+        <!-- Display search results as Bootstrap list -->
+        <ul class="list-group mt-3" id="searchResults"></ul>
+    </div>
+
+    <!-- Add Bootstrap JS script -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+
+
+    <script>
+        //const Fuse = require('fuse.js');
+        let jsonData = []
+        let searchTerms = []
+        let searchResults = []
+        let checkSearch
+        $.getJSON(
+            "https://sheets.googleapis.com/v4/spreadsheets/1xf2K2UQZAc_shQT5RIZAkfY93smNv33e0cnyr5WFBww/values/Form Responses 1?alt=json&key=AIzaSyBljC7y8axtIJMi5FXbTK655sdUZQGHSw0",
+            function (data) {
+                $.each(data.values, function (key, val) {
+                    if (key > 0) {
+                        t = {
+                            date: val[0],
+                            name: val[1],
+                            org: val[2],
+                            website: val[3],
+                            mission: val[4],
+                            address: val[5],
+                            city: val[6],
+                            zip: val[7],
+                            train: val[8],
+                            focus: val[9],
+                            bioregion: val[10]
+                        }
+                        jsonData.push(t);
+                    }
+                });
+                searchResults = [...jsonData]; // Initialize search results with all data on page load
+                searchJson()
+            })
+        // Test JSON data to search on
+        /* const jsonData = [{
+                "id": 1,
+                "name": "John Doe",
+                "age": 30,
+                "email": "john@example.com"
+            }, {
+                "id": 2,
+                "name": "Jane Smith",
+                "age": 25,
+                "email": "jane@example.com"
+            }, {
+                "id": 3,
+                "name": "Bob Johnson",
+                "age": 35,
+                "email": "bob@example.com"
+            }
+            // Add more test data as needed
+        ]; */
+
+        const fuseOptions = {
+            isCaseSensitive: false,
+            // includeScore: false,
+            // shouldSort: true,
+            // includeMatches: true,
+            // findAllMatches: true,
+            // minMatchCharLength: 1,
+            // location: 0,
+            threshold: 1,
+            // distance: 100,
+            // useExtendedSearch: false,
+            ignoreLocation: true,
+            // ignoreFieldNorm: false,
+            // fieldNormWeight: 1,
+           /*  keys: [
+                "name",
+                "org",
+                "train"
+            ] */
+        };
+
+        const fuse = new Fuse(jsonData, fuseOptions);
+
+        // Function to search JSON data and display results
+        function searchJsonFuse() {
+            const searchQuery = document.getElementById("searchInput").value.trim().toLowerCase();
+
+            // If the search query is empty, show all results
+            if (!searchQuery) {
+                searchResults = [...jsonData];
+            } else {
+                // Split the search query by spaces to treat each word as a separate search term
+                const terms = searchQuery.split(" ").filter(term => term.trim() !== "");
+
+                // Filter JSON data based on search query and search terms (pills)
+                searchResults = fuse.search(searchQuery)
+            }
+
+            // Display search terms as pills inside the search input
+            const searchTermsContainer = document.getElementById("searchTermsContainer");
+            searchTermsContainer.innerHTML = "";
+            searchTerms.forEach(term => {
+                const pill = createPill(term);
+                searchTermsContainer.appendChild(pill);
+            });
+
+            // Display type-ahead suggestions as Bootstrap pills
+            const typeAheadContainer = document.getElementById("typeAhead");
+            typeAheadContainer.innerHTML = "";
+            if (searchQuery) {
+                const typeAheadList = jsonData
+                    .map(item => Object.values(item).map(value => value.toString().toLowerCase()))
+                    .flat()
+                    .filter(value => value.includes(searchQuery))
+                    .slice(0, 5); // Limit to the first 5 suggestions for simplicity
+
+                typeAheadList.forEach(suggestion => {
+                    const pill = createPill(suggestion);
+                    pill.onclick = function () {
+                        document.getElementById("searchInput").value = suggestion;
+                        addSearchTerm(suggestion);
+                    };
+                    typeAheadContainer.appendChild(pill);
+                });
+            }
+
+            // Display filtered search results as Bootstrap list
+            const searchResultsList = document.getElementById("searchResults");
+            searchResultsList.innerHTML = "";
+            if (searchResults.length === 0) {
+                searchResultsList.innerHTML = "<li class='list-group-item'>No results found.</li>";
+            } else {
+                searchResults.forEach(item => {
+                    const listItem = document.createElement("li");
+                    listItem.classList.add("list-group-item");
+                    listItem.textContent = JSON.stringify(item, null,
+                        2); // Display the matched item (you can customize the display if needed)
+                    searchResultsList.appendChild(listItem);
+                });
+            }
+        }
+
+
+        // Function to search JSON data and display results
+        function searchJson() {
+            let searchQuery = ''
+
+            if (checkSearch == '') {
+                searchQuery = document.getElementById("searchInput").value.trim().toLowerCase();
+            } else {
+                searchQuery = checkSearch
+            }
+
+            // If the search query is empty, show all results
+            if (!searchQuery) {
+                searchResults = [...jsonData];
+            } else {
+                // Split the search query by spaces to treat each word as a separate search term
+                const terms = searchQuery.split(" ").filter(term => term.trim() !== "");
+
+                // Filter JSON data based on search query and search terms (pills)
+                searchResults = jsonData.filter(item => {
+                    const itemText = JSON.stringify(item).toLowerCase();
+                    return terms.some(term => itemText.includes(term));
+                });
+            }
+
+            // Display search terms as pills inside the search input
+            const searchTermsContainer = document.getElementById("searchTermsContainer");
+            searchTermsContainer.innerHTML = "";
+            searchTerms.forEach(term => {
+                const pill = createPill(term);
+                searchTermsContainer.appendChild(pill);
+            });
+
+            // Display type-ahead suggestions as Bootstrap pills
+            const typeAheadContainer = document.getElementById("typeAhead");
+            typeAheadContainer.innerHTML = "";
+            if (searchQuery) {
+                const typeAheadList = jsonData
+                    .map(item => Object.values(item).map(value => value.toString().toLowerCase()))
+                    .flat()
+                    .filter(value => value.includes(searchQuery))
+                    .slice(0, 5); // Limit to the first 5 suggestions for simplicity
+
+                typeAheadList.forEach(suggestion => {
+                    const pill = createPill(suggestion);
+                    pill.onclick = function () {
+                        document.getElementById("searchInput").value = suggestion;
+                        addSearchTerm(suggestion);
+                    };
+                    typeAheadContainer.appendChild(pill);
+                });
+            }
+
+            // Display filtered search results as Bootstrap list
+            const searchResultsList = document.getElementById("searchResults");
+            searchResultsList.innerHTML = "";
+            if (searchResults.length === 0) {
+                searchResultsList.innerHTML = "<li class='list-group-item'>No results found.</li>";
+            } else {
+                searchResults.forEach(item => {
+                    const listItem = document.createElement("li");
+                    listItem.classList.add("list-group-item");
+                    listItem.textContent = JSON.stringify(item, null,
+                        2); // Display the matched item (you can customize the display if needed)
+                    searchResultsList.appendChild(listItem);
+                });
+            }
+        }
+
+        // Function to create a pill element
+        function createPill(term) {
+            const pill = document.createElement("span");
+            pill.classList.add("badge", "badge-pill", "badge-primary", "mr-1");
+            pill.textContent = term;
+            pill.onclick = function () {
+                removeSearchTerm(term);
+            };
+            return pill;
+        }
+
+        // Function to add a search term to the list
+        function addSearchTerm(term) {
+            term = term.trim().toLowerCase();
+            if (!searchTerms.includes(term)) {
+                searchTerms.push(term);
+                searchJson(); // Re-run the search after adding the term
+            }
+        }
+
+        // Function to remove a search term from the list
+        function removeSearchTerm(term) {
+            searchTerms = searchTerms.filter(item => item !== term);
+            searchJson(); // Re-run the search after removing the term
+        }
+
+        // Add input event listener to trigger search as you type
+        document.getElementById("searchInput").addEventListener("input", searchJson);
+
+        $('input[name="trainCheck"]').on("click", function () {
+            checkSearch = ''
+            $('#searchData').find('.form-check-input').each(function () {
+                if (this.checked) {
+                    checkSearch += this.value
+                }
+            })
+
+        })
+    </script>
+</body>
+
+</html>
