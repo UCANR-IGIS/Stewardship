@@ -4,50 +4,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JSON File Search</title>
+    <title>Stewardship Workforce Training Program Database</title>
     <!-- Add Bootstrap CSS link -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css" />
 </head>
 
+<style>
+    #viewDiv {
+        grid-column: 2;
+        grid-row: 1;
+        padding: 0;
+        margin: 0;
+        height: 25vh;
+        width: 25vh;
+        border: 1px solid #dee2e6;
+    }
+
+    .parent {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        grid-template-rows: auto 1fr auto;
+        grid-gap: 10px;
+    }
+
+    .header {
+        grid-column: 1 / 3;
+        grid-row: 1;
+        padding: 5px
+    }
+
+    .search {
+        grid-column: 1;
+        grid-row: 2;
+        padding: 5px
+    }
+
+    .resList {
+        grid-column: 2;
+        grid-row: 2;
+        padding: 5px
+    }
+
+    .footer {
+        grid-column: 1 / 3;
+        grid-row: 3;
+        padding: 5px
+    }
+
+    .modal-body {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        grid-template-rows: 1fr;
+        grid-gap: 0px;
+        min-height: 30vh
+    }
+
+    .info {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .modal-dialog {
+        max-width: 70vw !important
+    }
+</style>
+
 <body>
-    <div class="container mt-4">
-        <h1>JSON File Search</h1>
+    <div class="parent">
+        <div class="header">
+            <h1>Stewardship Workforce Training Program Database</h1>
+        </div>
         <!-- No file input, using test JSON data directly in the script -->
 
-        <div class="form-group mt-3">
-            <div id ="searchData" class="input-group">
+        <div class="search">
+            <div class="input-group">
                 <input type="text" class="form-control" id="searchInput" placeholder="Enter text to search">
                 <div class="input-group-append">
                     <button class="btn btn-primary" onclick="searchJson()">Search</button>
                 </div>
+
+            </div>
+            <div id="trainData">
+                <h6>Training Type</h6>
                 <div class="form-check"><input name="trainCheck" id="gis" class="form-check-input" type="checkbox"
                         value="apprenticeship" /> <label class="form-check-label" for="gis">Apprenticeship</label></div>
                 <div class="form-check"><input name="trainCheck" id="training" class="form-check-input" type="checkbox"
-                        value="training" /> <label class="form-check-label" for="internship">Internship</label>
+                        value="internship" /> <label class="form-check-label" for="internship">Internship</label>
                 </div>
                 <div class="form-check"><input name="trainCheck" id="drone" class="form-check-input" type="checkbox"
-                        value="drone" />
+                        value="certificate" />
                     <label class="form-check-label" for="certificate">Certificate Program</label></div>
                 <div class="form-check"><input name="trainCheck" id="research" class="form-check-input" type="checkbox"
-                        value="research" /> <label class="form-check-label" for="associate">Associate's Degree</label>
+                        value="associate" /> <label class="form-check-label" for="associate">Associate's Degree</label>
+                </div>
+            </div>
+            <div id="focusData">
+                <h6>Stewardship Focus</h6>
+                <div class="form-check"><input name="trainCheck" id="gis" class="form-check-input" type="checkbox"
+                        value="waterways" /> <label class="form-check-label" for="gis">Waterways</label></div>
+                <div class="form-check"><input name="trainCheck" id="training" class="form-check-input" type="checkbox"
+                        value="fire management" /> <label class="form-check-label" for="internship">Fire
+                        Management</label>
+                </div>
+                <div class="form-check"><input name="trainCheck" id="drone" class="form-check-input" type="checkbox"
+                        value="habitat restoration" />
+                    <label class="form-check-label" for="certificate">Habitat Restoration</label></div>
+                <div class="form-check"><input name="trainCheck" id="research" class="form-check-input" type="checkbox"
+                        value="forestry" /> <label class="form-check-label" for="associate">Forestry</label>
+                </div>
+                <div class="form-check"><input name="trainCheck" id="gis" class="form-check-input" type="checkbox"
+                        value="invasive plant control" /> <label class="form-check-label" for="gis">Invasive Plant
+                        Control</label></div>
+                <div class="form-check"><input name="trainCheck" id="training" class="form-check-input" type="checkbox"
+                        value="climate resilience" /> <label class="form-check-label" for="internship">Climate
+                        Resilience</label>
+                </div>
+                <div class="form-check"><input name="trainCheck" id="drone" class="form-check-input" type="checkbox"
+                        value="environmental education" />
+                    <label class="form-check-label" for="certificate">Environmental Education</label></div>
+                <div class="form-check"><input name="trainCheck" id="research" class="form-check-input" type="checkbox"
+                        value="sustainable farming practices" /> <label class="form-check-label"
+                        for="associate">Sustainable Farming Practices</label>
+                </div>
+            </div>
+            <div id="skillData">
+                <h6>Skills</h6>
+                <div class="form-check"><input name="trainCheck" id="gis" class="form-check-input" type="checkbox"
+                        value="horticulture" /> <label class="form-check-label" for="gis">Horticulture</label></div>
+                <div class="form-check"><input name="trainCheck" id="training" class="form-check-input" type="checkbox"
+                        value="small equip" /> <label class="form-check-label" for="internship">Small Equipment
+                        Operation</label>
+                </div>
+                <div class="form-check"><input name="trainCheck" id="drone" class="form-check-input" type="checkbox"
+                        value="research methods" />
+                    <label class="form-check-label" for="certificate">Research Methods</label></div>
+                <div class="form-check"><input name="trainCheck" id="research" class="form-check-input" type="checkbox"
+                        value="traditional indigenous knowledge" /> <label class="form-check-label"
+                        for="associate">Traditional Indigenous Knowledge</label>
+                </div>
+                <div class="form-check"><input name="trainCheck" id="gis" class="form-check-input" type="checkbox"
+                        value="project management" /> <label class="form-check-label" for="gis">Project
+                        Management</label></div>
+                <div class="form-check"><input name="trainCheck" id="training" class="form-check-input" type="checkbox"
+                        value="restoration trade work" /> <label class="form-check-label" for="internship">Restoration
+                        Trade Work</label>
+                </div>
+            </div>
+            <div id="knowData">
+                <h6>Knowledge Level</h6>
+                <div class="form-check"><input name="trainCheck" id="gis" class="form-check-input" type="checkbox"
+                        value="beginner" /> <label class="form-check-label" for="gis">Beginner</label></div>
+                <div class="form-check"><input name="trainCheck" id="training" class="form-check-input" type="checkbox"
+                        value="intermediate" /> <label class="form-check-label" for="internship">Intermediate</label>
+                </div>
+            </div>
+            <div id="wageData">
+                <h6>Wages/Stipends</h6>
+                <div class="form-check"><input name="trainCheck" id="gis" class="form-check-input" type="checkbox"
+                        value="yeswage" /> <label class="form-check-label" for="gis">Yes</label></div>
+                <div class="form-check"><input name="trainCheck" id="training" class="form-check-input" type="checkbox"
+                        value="nowage" /> <label class="form-check-label" for="internship">No</label>
                 </div>
             </div>
         </div>
 
-        <!-- Display search terms as pills inside the search input -->
-        <div class="form-group mt-3" id="searchTermsContainer"></div>
-
-        <!-- Display type-ahead suggestions as Bootstrap pills -->
-        <div class="mt-3" id="typeAhead"></div>
 
         <!-- Display search results as Bootstrap list -->
-        <ul class="list-group mt-3" id="searchResults"></ul>
+        <div class="resList">
+            <ul class="list-group" id="searchResults"></ul>
+        </div>
+
+        <div class="modal fade" id="infoModal" tabindex="-1" role="dialog" aria-labelledby="infoModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="infoModalLabel">
+                        </h5>
+                    </div>
+                    <div class="modal-body">
+                        <div id="modalInfo" class="info">
+                        </div>
+                        <div id="viewDiv"></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Add Bootstrap JS script -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+    <script src="https://js.arcgis.com/4.27/"></script>
 
 
     <script>
@@ -55,30 +206,162 @@
         let jsonData = []
         let searchTerms = []
         let searchResults = []
-        let checkSearch
+        let searchArr = []
+        let checkTrain
+        let checkFocus
+        let checkSkill
+        let checkKnow
+        let checkWage
+        let fuse
+        let view
+        let simpleMarkerSymbol
+        let searchWidget
+        let searchStatus
+        let fuseOptions
+        require([
+            "esri/core/reactiveUtils",
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/widgets/Search",
+            "esri/symbols/SimpleMarkerSymbol",
+            "esri/geometry/Point",
+            "esri/Graphic"
+        ], (reactiveUtils, Map, MapView, Search, SimpleMarkerSymbol, Point, Graphic) => {
+
+            simpleMarkerSymbol = new SimpleMarkerSymbol({
+                angle: 0,
+                color: [255, 255, 255, 1],
+                outline: {
+                    cap: "round",
+                    color: [0, 122, 194, 1],
+                    join: "round",
+                    miterLimit: 1,
+                    style: "solid",
+                    width: 2
+                },
+                path: "undefined",
+                size: 12,
+                style: "circle",
+                xoffset: 0,
+                yoffset: 0
+            });
+
+            const map = new Map({
+                basemap: "topo-vector"
+            });
+
+            view = new MapView({
+                scale: 123456789,
+                container: "viewDiv",
+                map: map
+            });
+
+            view.ui.remove(["attribution", "zoom"]);
+
+            searchWidget = new Search({
+                view: view,
+                popupEnabled: false
+            });
+
+
+            function stopEvtPropagation(event) {
+                event.stopPropagation();
+            }
+
+            // disable mouse wheel scroll zooming on the view
+            view.on("mouse-wheel", stopEvtPropagation);
+
+            // disable zooming via double-click on the view
+            view.on("double-click", stopEvtPropagation);
+
+            // disable zooming out via double-click + Control on the view
+            view.on("double-click", ["Control"], stopEvtPropagation);
+
+            // disables pinch-zoom and panning on the view
+            view.on("drag", stopEvtPropagation);
+
+            // disable the view's zoom box to prevent the Shift + drag
+            // and Shift + Control + drag zoom gestures.
+            view.on("drag", ["Shift"], stopEvtPropagation);
+            view.on("drag", ["Shift", "Control"], stopEvtPropagation);
+
+            // prevents zooming with the + and - keys
+            view.on("key-down", (event) => {
+                const prohibitedKeys = [
+                    "+",
+                    "-",
+                    "Shift",
+                    "_",
+                    "=",
+                    "ArrowUp",
+                    "ArrowDown",
+                    "ArrowRight",
+                    "ArrowLeft"
+                ];
+                const keyPressed = event.key;
+                if (prohibitedKeys.indexOf(keyPressed) !== -1) {
+                    event.stopPropagation();
+                }
+            });
+            searchWidget.search("fresno");
+            reactiveUtils.when(() => !view?.updating, () => {
+                if (view.graphics.items[0]) {
+                    view.graphics.items[0].symbol = simpleMarkerSymbol
+                }
+                //let newExt = view.extent.expand(1.5)
+                view.zoom = 10
+            })
+        });
         $.getJSON(
             "https://sheets.googleapis.com/v4/spreadsheets/1xf2K2UQZAc_shQT5RIZAkfY93smNv33e0cnyr5WFBww/values/Form Responses 1?alt=json&key=AIzaSyBljC7y8axtIJMi5FXbTK655sdUZQGHSw0",
             function (data) {
                 $.each(data.values, function (key, val) {
                     if (key > 0) {
                         t = {
+                            id: key,
                             date: val[0],
                             name: val[1],
                             org: val[2],
                             website: val[3],
                             mission: val[4],
-                            address: val[5],
+                            address: val[5] + " " + val[6] + " " + val[7],
                             city: val[6],
                             zip: val[7],
                             train: val[8],
                             focus: val[9],
-                            bioregion: val[10]
+                            bioregion: val[10],
+                            hours: val[11],
+                            weeks: val[12],
+                            tags: val[1] + ", " + val[2] + ", " + val[8] + ", " + val[9] + ", " + val[
+                                13] + ", " + val[14] + ", " + val[16] + "wage"
                         }
                         jsonData.push(t);
                     }
                 });
                 searchResults = [...jsonData]; // Initialize search results with all data on page load
                 searchJson()
+
+                fuseOptions = {
+                    isCaseSensitive: false,
+                    // includeScore: false,
+                    // shouldSort: true,
+                    // includeMatches: true,
+                    // findAllMatches: true,
+                    // minMatchCharLength: 1,
+                    // location: 0,
+                    threshold: 0.25,
+                    // distance: 100,
+                    useExtendedSearch: true,
+                    ignoreLocation: true,
+                    // ignoreFieldNorm: false,
+                    // fieldNormWeight: 1,
+                    keys: [
+                        "tags"
+                    ]
+                };
+
+                fuse = new Fuse(jsonData, fuseOptions);
+
             })
         // Test JSON data to search on
         /* const jsonData = [{
@@ -100,140 +383,82 @@
             // Add more test data as needed
         ]; */
 
-        const fuseOptions = {
-            isCaseSensitive: false,
-            // includeScore: false,
-            // shouldSort: true,
-            // includeMatches: true,
-            // findAllMatches: true,
-            // minMatchCharLength: 1,
-            // location: 0,
-            threshold: 1,
-            // distance: 100,
-            // useExtendedSearch: false,
-            ignoreLocation: true,
-            // ignoreFieldNorm: false,
-            // fieldNormWeight: 1,
-           /*  keys: [
-                "name",
-                "org",
-                "train"
-            ] */
-        };
-
-        const fuse = new Fuse(jsonData, fuseOptions);
-
-        // Function to search JSON data and display results
-        function searchJsonFuse() {
-            const searchQuery = document.getElementById("searchInput").value.trim().toLowerCase();
-
-            // If the search query is empty, show all results
-            if (!searchQuery) {
-                searchResults = [...jsonData];
-            } else {
-                // Split the search query by spaces to treat each word as a separate search term
-                const terms = searchQuery.split(" ").filter(term => term.trim() !== "");
-
-                // Filter JSON data based on search query and search terms (pills)
-                searchResults = fuse.search(searchQuery)
-            }
-
-            // Display search terms as pills inside the search input
-            const searchTermsContainer = document.getElementById("searchTermsContainer");
-            searchTermsContainer.innerHTML = "";
-            searchTerms.forEach(term => {
-                const pill = createPill(term);
-                searchTermsContainer.appendChild(pill);
-            });
-
-            // Display type-ahead suggestions as Bootstrap pills
-            const typeAheadContainer = document.getElementById("typeAhead");
-            typeAheadContainer.innerHTML = "";
-            if (searchQuery) {
-                const typeAheadList = jsonData
-                    .map(item => Object.values(item).map(value => value.toString().toLowerCase()))
-                    .flat()
-                    .filter(value => value.includes(searchQuery))
-                    .slice(0, 5); // Limit to the first 5 suggestions for simplicity
-
-                typeAheadList.forEach(suggestion => {
-                    const pill = createPill(suggestion);
-                    pill.onclick = function () {
-                        document.getElementById("searchInput").value = suggestion;
-                        addSearchTerm(suggestion);
-                    };
-                    typeAheadContainer.appendChild(pill);
-                });
-            }
-
-            // Display filtered search results as Bootstrap list
-            const searchResultsList = document.getElementById("searchResults");
-            searchResultsList.innerHTML = "";
-            if (searchResults.length === 0) {
-                searchResultsList.innerHTML = "<li class='list-group-item'>No results found.</li>";
-            } else {
-                searchResults.forEach(item => {
-                    const listItem = document.createElement("li");
-                    listItem.classList.add("list-group-item");
-                    listItem.textContent = JSON.stringify(item, null,
-                        2); // Display the matched item (you can customize the display if needed)
-                    searchResultsList.appendChild(listItem);
-                });
-            }
-        }
-
 
         // Function to search JSON data and display results
         function searchJson() {
-            let searchQuery = ''
+            let searchQuery = document.getElementById("searchInput").value.trim().toLowerCase();
 
-            if (checkSearch == '') {
-                searchQuery = document.getElementById("searchInput").value.trim().toLowerCase();
-            } else {
-                searchQuery = checkSearch
+            
+
+            searchArr = []
+            checkTrain = ''
+        checkFocus = ''
+        checkSkill = ''
+        checkKnow = ''
+        checkWage = ''
+        if (searchQuery != ''){
+            searchArr.push(searchQuery)
+        }
+            $('#trainData').find('.form-check-input').each(function () {
+                if (this.checked) {
+                    checkTrain += this.value + "|"
+                }
+            })
+            if (checkTrain != "") {
+            searchArr.push(checkTrain.slice(0,-1))
             }
+            $('#focusData').find('.form-check-input').each(function () {
+                if (this.checked) {
+                    checkFocus += this.value + "|"
+                }
+            })
+            if (checkFocus != "") {
+            searchArr.push(checkFocus.slice(0,-1))
+            }
+            $('#skillData').find('.form-check-input').each(function () {
+                if (this.checked) {
+                    checkSkill += this.value + "|"
+                }
+            })
+            if (checkSkill != "") {
+            searchArr.push(checkSkill.slice(0,-1))
+            }
+            $('#knowData').find('.form-check-input').each(function () {
+                if (this.checked) {
+                    checkKnow += this.value + "|"
+                }
+            })
+            if (checkKnow != "") {
+            searchArr.push(checkKnow.slice(0,-1))
+            }
+            $('#wageData').find('.form-check-input').each(function () {
+                if (this.checked) {
+                    checkWage += this.value + "|"
+                }
+            })
+            if (checkWage != "") {
+            searchArr.push(checkWage.slice(0,-1))
+            }
+
+            /* if (checkSearch) {
+                searchQuery = checkSearch
+            } */
 
             // If the search query is empty, show all results
-            if (!searchQuery) {
+           /*  if (!searchQuery) {
+                searchStatus = 0 */
                 searchResults = [...jsonData];
-            } else {
-                // Split the search query by spaces to treat each word as a separate search term
-                const terms = searchQuery.split(" ").filter(term => term.trim() !== "");
 
-                // Filter JSON data based on search query and search terms (pills)
-                searchResults = jsonData.filter(item => {
-                    const itemText = JSON.stringify(item).toLowerCase();
-                    return terms.some(term => itemText.includes(term));
-                });
-            }
-
-            // Display search terms as pills inside the search input
-            const searchTermsContainer = document.getElementById("searchTermsContainer");
-            searchTermsContainer.innerHTML = "";
-            searchTerms.forEach(term => {
-                const pill = createPill(term);
-                searchTermsContainer.appendChild(pill);
-            });
-
-            // Display type-ahead suggestions as Bootstrap pills
-            const typeAheadContainer = document.getElementById("typeAhead");
-            typeAheadContainer.innerHTML = "";
-            if (searchQuery) {
-                const typeAheadList = jsonData
-                    .map(item => Object.values(item).map(value => value.toString().toLowerCase()))
-                    .flat()
-                    .filter(value => value.includes(searchQuery))
-                    .slice(0, 5); // Limit to the first 5 suggestions for simplicity
-
-                typeAheadList.forEach(suggestion => {
-                    const pill = createPill(suggestion);
-                    pill.onclick = function () {
-                        document.getElementById("searchInput").value = suggestion;
-                        addSearchTerm(suggestion);
-                    };
-                    typeAheadContainer.appendChild(pill);
-                });
-            }
+                
+                    fuseTest(searchResults)
+                
+            /* } else {
+                searchStatus = 0
+                // Filter JSON data based on search query
+                //searchResults = fuse.search(searchQuery)
+                
+                    fuseTest(searchResults)
+            }  */
 
             // Display filtered search results as Bootstrap list
             const searchResultsList = document.getElementById("searchResults");
@@ -241,53 +466,69 @@
             if (searchResults.length === 0) {
                 searchResultsList.innerHTML = "<li class='list-group-item'>No results found.</li>";
             } else {
-                searchResults.forEach(item => {
+                $.each(searchResults, (key, val) => {
                     const listItem = document.createElement("li");
                     listItem.classList.add("list-group-item");
-                    listItem.textContent = JSON.stringify(item, null,
-                        2); // Display the matched item (you can customize the display if needed)
+                   
+                        listItem.id = val.id
+                        listItem.innerHTML = '<b>' + val.name + '</b><br>Organization: ' + val.org +
+                            '<br>Address: ' + val.address
+                   
                     searchResultsList.appendChild(listItem);
                 });
             }
         }
 
-        // Function to create a pill element
-        function createPill(term) {
-            const pill = document.createElement("span");
-            pill.classList.add("badge", "badge-pill", "badge-primary", "mr-1");
-            pill.textContent = term;
-            pill.onclick = function () {
-                removeSearchTerm(term);
-            };
-            return pill;
+        function searchLoop(data, search) {
+            const fuse1 = new Fuse(data, fuseOptions);
+
+            // Perform the first search
+            const searchResults1 = fuse1.search(search);
+
+            // Filter the results to get the data for the second search
+            const filteredData = searchResults1.map((result) => result.item);
+
+            return filteredData
         }
 
-        // Function to add a search term to the list
-        function addSearchTerm(term) {
-            term = term.trim().toLowerCase();
-            if (!searchTerms.includes(term)) {
-                searchTerms.push(term);
-                searchJson(); // Re-run the search after adding the term
-            }
+        function fuseTest(data) {
+
+           $.each(searchArr, function(key, val) {
+                data = searchLoop(data, val)
+           })
+           searchResults = data
         }
 
-        // Function to remove a search term from the list
-        function removeSearchTerm(term) {
-            searchTerms = searchTerms.filter(item => item !== term);
-            searchJson(); // Re-run the search after removing the term
+        function getObject(n) {
+            const targetName = n; // The value you want to search for
+
+            const selectedObject = jsonData.find(item => item.id === targetName);
+
+            return selectedObject
+
         }
+
 
         // Add input event listener to trigger search as you type
         document.getElementById("searchInput").addEventListener("input", searchJson);
 
         $('input[name="trainCheck"]').on("click", function () {
-            checkSearch = ''
-            $('#searchData').find('.form-check-input').each(function () {
-                if (this.checked) {
-                    checkSearch += this.value
-                }
-            })
 
+            searchJson()
+        })
+
+        $(document).ready(() => {
+            $("ul").on("click", "li", function () {
+                selectObject = getObject(parseInt(this.id))
+                searchWidget.search(selectObject.address)
+                $('#infoModalLabel').text(selectObject.name);
+                $('#modalInfo').html('<b>Website:</b> <a href="' + selectObject.website +
+                    '" target="_blank">' + selectObject.website + '</a><br><b>Mission:</b> ' +
+                    selectObject.mission +
+                    '<br><b>Training Type:</b> ' + selectObject.train +
+                    '<br><b>Stewardship Focus:</b> ' + selectObject.focus);
+                $('#infoModal').modal('show');
+            });
         })
     </script>
 </body>

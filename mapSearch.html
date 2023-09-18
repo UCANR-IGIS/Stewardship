@@ -1,0 +1,135 @@
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>Search Widget | Sample | ArcGIS Maps SDK for JavaScript 4.27</title>
+
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 1.5in;
+            width: 1.5in
+        }
+    </style>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css" />
+    <script src="https://js.arcgis.com/4.27/"></script>
+
+    <script>
+        let view
+        let simpleMarkerSymbol
+        let searchWidget
+        require([
+        "esri/core/reactiveUtils",
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/widgets/Search",
+            "esri/symbols/SimpleMarkerSymbol",
+            "esri/geometry/Point",
+            "esri/Graphic"
+        ], (reactiveUtils, Map, MapView, Search, SimpleMarkerSymbol, Point, Graphic) => {
+            simpleMarkerSymbol = new SimpleMarkerSymbol({
+                angle: 0,
+                color: [255, 255, 255, 1],
+                outline: {
+                    cap: "round",
+                    color: [0, 122, 194, 1],
+                    join: "round",
+                    miterLimit: 1,
+                    style: "solid",
+                    width: 2
+                },
+                path: "undefined",
+                size: 12,
+                style: "circle",
+                xoffset: 0,
+                yoffset: 0
+            });
+
+            /* let pointGraphic = new Graphic({
+  geometry: point,
+  symbol: simpleMarkerSymbol
+});*/
+
+            const map = new Map({
+                basemap: "satellite",
+                ground: "world-elevation"
+            });
+
+            view = new MapView({
+                scale: 123456789,
+                container: "viewDiv",
+                map: map
+            });
+
+            view.ui.remove(["attribution", "zoom"]);
+
+            searchWidget = new Search({
+                view: view,
+                popupEnabled: false
+                //resultGraphic: pointGraphic
+            });
+
+            // Add the search widget to the top right corner of the view
+            /* view.ui.add(searchWidget, {
+              position: "top-right"
+            });*/
+
+            function stopEvtPropagation(event) {
+            event.stopPropagation();
+          }
+
+          // disable mouse wheel scroll zooming on the view
+          view.on("mouse-wheel", stopEvtPropagation);
+
+          // disable zooming via double-click on the view
+          view.on("double-click", stopEvtPropagation);
+
+          // disable zooming out via double-click + Control on the view
+          view.on("double-click", ["Control"], stopEvtPropagation);
+
+          // disables pinch-zoom and panning on the view
+          view.on("drag", stopEvtPropagation);
+
+          // disable the view's zoom box to prevent the Shift + drag
+          // and Shift + Control + drag zoom gestures.
+          view.on("drag", ["Shift"], stopEvtPropagation);
+          view.on("drag", ["Shift", "Control"], stopEvtPropagation);
+
+          // prevents zooming with the + and - keys
+          view.on("key-down", (event) => {
+            const prohibitedKeys = [
+              "+",
+              "-",
+              "Shift",
+              "_",
+              "=",
+              "ArrowUp",
+              "ArrowDown",
+              "ArrowRight",
+              "ArrowLeft"
+            ];
+            const keyPressed = event.key;
+            if (prohibitedKeys.indexOf(keyPressed) !== -1) {
+              event.stopPropagation();
+            }
+        });
+            searchWidget.search("fresno");
+            reactiveUtils.when(() => !view?.updating, () => {
+                if (view.graphics.items[0]) {
+                    view.graphics.items[0].symbol = simpleMarkerSymbol
+                }
+            })
+        });
+    </script>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+</body>
+
+</html>
